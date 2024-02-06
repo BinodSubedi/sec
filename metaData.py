@@ -9,8 +9,8 @@ import pandas as pd
 holdings = pd.read_csv('./russell-3000-clean.csv')
 
 
-API_KEY = "4b15c7f56e95f72b4a1efdd5c25131ac55419e347945269488d2413aa58abacd"
-
+API_KEY = "9a6033dae225dc7b78d9c6b20495e65c8d0bef5da2ec97cc3ed2d8955655d050"
+API_ENDPOINT = "https://api.sec-api.io/filing-reader"
 
 queryApi = QueryApi(api_key=API_KEY)
 renderApi = RenderApi(api_key=API_KEY)
@@ -35,7 +35,7 @@ def create_batches(tickers = [], max_length_of_batch = 100):
 
 
 
-def download_10K_metadata(tickers = [], start_year = 2021, end_year = 2022):
+def download_10K_metadata(tickers = [], start_year = 2023, end_year = 2023):
   # if Path('metadata.csv').is_file():
   #   print('✅ Reading metadata from metadata.csv')
   #   result = pd.read_csv('metadata.csv')
@@ -92,7 +92,7 @@ def download_10K_metadata(tickers = [], start_year = 2021, end_year = 2022):
 
 tickers = list(holdings['Ticker'])
 
-metadata = download_10K_metadata(tickers=tickers, start_year=2018, end_year=2020)
+metadata = download_10K_metadata(tickers=tickers, start_year=2023, end_year=2023)
 
 metadata.head(10)
 
@@ -106,11 +106,14 @@ def download_filing(metadata):
       os.makedirs(new_folder)
 
     url = metadata['filingUrl'].replace('ix?doc=/', '')
-    file_content = renderApi.get_filing(url)
-    file_name = url.split("/")[-1] 
+    api_url = API_ENDPOINT + "?token=" + API_KEY + "&url=" + url + "&type=pdf"
+    #file_content = renderApi.get_filing(url)
+    response = requests.get(api_url) 
+    
+    file_name = url.split("/")[-1].split('.')[0] + '.pdf' 
 
     with open(new_folder + "/" + file_name, "w") as f:
-      f.write(file_content)
+      f.write(response.content)
   except:
      print('❌ {ticker}: downloaded failed: {url}'.format(ticker=ticker, url=url))
 
